@@ -103,6 +103,70 @@ class Trie():
                     parent.delete_child(child.character)
                 child = parent
 
+    def valid_prefix(self, prefix) -> TrieNode:
+        node: TrieNode = self.root
+        stack: List[TrieNode] = [child for child in reversed(
+            node.children_list()
+        )]
+        index: int = 0
+
+        while stack and index < len(prefix):
+            node = stack.pop()
+            if node.character == prefix[index]:
+                if index == len(prefix) - 1 and not node.is_end_of_word:
+                    return node
+                index += 1
+                for child in reversed(node.children_list()):
+                    stack.append(child)
+
+        return False
+
+    def list_words_prefix(self, prefix) -> List[str]:
+        node: TrieNode = self.valid_prefix(prefix=prefix)
+        if not node:
+            return []
+
+        level: int = len(prefix) - 1
+        stack: List[(TrieNode, int)] = [(node, level)]
+        results = []
+        result = prefix
+
+        while stack:
+            node, level = stack.pop()
+            result = result[:level]
+            result += node.character
+            if node.is_end_of_word:
+                results.append(result)
+            for child in reversed(node.children_list()):
+                stack.append((child, level + 1))
+        return results
+
+    def list_words(self) -> List[str]:
+
+        if self.size == 0:
+            return []
+
+        stack: List[(TrieNode, int)] = [(child, 0) for child in reversed(
+            self.root.children_list()
+        )]
+
+        results = []
+        result = ""
+        node: TrieNode = None
+        level: int = 0
+        while stack:
+            node, level = stack.pop()
+            result = result[:level]
+            result += node.character
+            if node.is_end_of_word:
+                results.append(result)
+            for child in reversed(node.children_list()):
+                stack.append((child, level + 1))
+        return results
+
+    def __len__(self):
+        return self.size
+
     def __str__(self) -> str:
         trie_string: str = ""
         node: TrieNode = self.root
@@ -129,6 +193,8 @@ if __name__ == '__main__':
     trie.insert_word("bonds")
     trie.insert_word("cloak")
     trie.insert_word("cloaks")
+    trie.insert_word("clot")
+    trie.insert_word("clap")
     trie.insert_word("rotten")
     trie.insert_word("tomatoes")
     trie.insert_word("problem")
@@ -136,6 +202,15 @@ if __name__ == '__main__':
     print(str(trie))
     w: str = "problems"
     print(f"Word [{w}] exists: {trie.search_word(w)}")
-    trie.delete_word("problems")
+    print(f"Trie size before deletion: {len(trie)}")
+    trie.delete_word("problem")
+    print(f"Trie size after deletion: {len(trie)}")
     print(f"Word [{w}] exists: {trie.search_word(w)}")
     print(str(trie))
+    prefix: str = "bo"
+    if trie.valid_prefix(prefix):
+        print(f"Is the prefix [{prefix}] valid: True")
+    else:
+        print(f"Is the prefix [{prefix}] valid: False")
+    print(sorted(trie.list_words()))
+    print(sorted(trie.list_words_prefix("cl")))
